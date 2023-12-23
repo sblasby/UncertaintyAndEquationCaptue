@@ -75,16 +75,7 @@ class ValueUncertainty:
 
         self.errors = abs(errors)
 
-        if variable_name == '':
-
-            self._variable_name = self._last_var[0]
-
-            if not self._variable_name in self._values_dict:
-                self._values_dict[self._variable_name] = (str(self.values[0]), '')
-            
-            self._update_last_var()
-        else:
-            self._variable_name = variable_name
+        self._variable_name = variable_name
 
 
     def __len__(self):
@@ -148,11 +139,16 @@ class ValueUncertainty:
 
                 self._format_value_calcs('+',(self._variable_name, self.values[0]), (str(addend), addend))
         
-        return ValueUncertainty(values, errors)
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
 
     def __mul__(self, factor):
+
+        
+
         if type(factor) == ValueUncertainty:
 
             values = self.values * factor.values
@@ -163,19 +159,24 @@ class ValueUncertainty:
 
                 self._format_value_calcs('*',(self._variable_name, self.values[0]), (factor._variable_name, factor.values[0]))
 
-            return ValueUncertainty(values, errors)
-
         else:
+
+            values = self.values * factor
+
+            errors = self.errors * factor
 
             if self._capture_calcs:
 
                 self._format_value_calcs('*',(self._variable_name, self.values[0]), (str(factor), factor))
 
-            return ValueUncertainty(self.values * factor, self.errors * factor)
+        variable = ValueUncertainty._get_var()
+        
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __truediv__(self, divisor):
         
+
         if type(divisor) == ValueUncertainty:
 
             values = self.values / divisor.values
@@ -195,27 +196,40 @@ class ValueUncertainty:
 
                 self._format_value_calcs('/',(self._variable_name, self.values[0]), (str(divisor), divisor))
         
-        return ValueUncertainty(values, errors)
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __rtruediv__(self, quotient):
-        
+
+
         if type(quotient) == ValueUncertainty:
 
             values = quotient.values / self.values
 
             errors = values * np.sqrt((self.errors / self.values)**2 + (quotient.errors / quotient.values)**2)
 
+            if self._capture_calcs:
+
+                self._format_value_calcs('/', (quotient._variable_name, quotient.values[0]), (self._variable_name, self.values[0]))
+
         else:
             values = quotient / self.values
 
             errors = values * self.errors / self.values
+
+            if self._capture_calcs:
+
+                self._format_value_calcs('/', (str(quotient), quotient), (self._variable_name, self.values[0]))
         
-        return ValueUncertainty(values, errors)
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
     
 
     def __pow__(self, power): 
-        
+
         values = self.values ** power
         
         errors = power * values * self.errors / self.values
@@ -224,16 +238,26 @@ class ValueUncertainty:
 
                 self._format_value_calcs('**',(self._variable_name, self.values[0]), (str(power), power))
 
-        return ValueUncertainty(values, errors)
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __rpow__(self, base):
+
+        
 
         values = base ** self.values
 
         errors = values * np.log(base) * self.errors
 
-        return ValueUncertainty(values, errors)
+        if self._capture_calcs:
+
+            self._format_value_calcs('**', (str(base), base), (self._variable_name, self.values[0]))
+
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __radd__(self, addend):
@@ -241,11 +265,59 @@ class ValueUncertainty:
 
 
     def __sub__(self, term):
-        return self + -1 * term
+
+
+        if type(term) == ValueUncertainty:
+
+            values = self.values - term.values
+
+            errors = np.sqrt(self.errors**2 + term.errors**2)
+
+            if self._capture_calcs:
+
+                self._format_value_calcs('-',(self._variable_name, self.values[0]), (term._variable_name, term.values[0]))
+
+        else:
+
+            values = self.values - term
+
+            errors = self.errors
+
+            if self._capture_calcs:
+
+                self._format_value_calcs('-',(self._variable_name, self.values[0]), (str(term), term))
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __rsub__(self, term):
-        return -1 * self + term
+
+
+        if type(term) == ValueUncertainty:
+
+            values = term.values - self.values
+
+            errors = np.sqrt(self.errors**2 + term.errors**2)
+
+            if self._capture_calcs:
+
+                self._format_value_calcs('-', (term._variable_name, term.values[0]), (self._variable_name, self.values[0]))
+
+        else:
+
+            values = term - self.values
+
+            errors = self.errors
+
+            if self._capture_calcs:
+
+                self._format_value_calcs('-', (str(term), term),(self._variable_name, self.values[0]))
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __rmul__(self, factor):
@@ -315,25 +387,17 @@ class ValueUncertainty:
 
         current_var = ValueUncertainty._last_var[0]
 
-        prev_var = f"@{int(current_var[1:-1]) - 1}#"
+        next_var = f"@{int(current_var[1:-1]) + 1}#"
 
-        prev_result = str(eval(ValueUncertainty._values_dict[prev_var][1]))
+        next_result = str(eval(ValueUncertainty._values_dict[current_var][1]))
 
         value_dict = ValueUncertainty._values_dict
 
-        value_dict[current_var] = (prev_var, prev_result)
+        value_dict[next_var] = (current_var, next_result)
 
-        final_var = f"@{int(current_var[1:-1]) + 1}#"
+        final_var = f"@{int(current_var[1:-1]) + 2}#"
 
-        value_dict[final_var] = (current_var, '')        
-
-        # while True:
-
-        #     if current_var in value_dict and '@' in value_dict[current_var][0]:
-        #         break
-
-        #     else:
-        #         current_var = f"@{int(current_var[1:-1]) - 1}#"
+        value_dict[final_var] = (next_var, '')        
         
         latex_list = ValueUncertainty._recursive_formula_creater(value_dict[final_var][0])
 
@@ -473,7 +537,7 @@ class ValueUncertainty:
 
 
     def _update_last_var(self):
-        self._last_var[0] = f"@{int(self._last_var[0][1:-1]) + 1}#"
+        ValueUncertainty._last_var[0] = f"@{int(self._last_var[0][1:-1]) + 1}#"
 
     @staticmethod
     def _recursive_formula_creater(current_str : str):
@@ -491,9 +555,30 @@ class ValueUncertainty:
 
             result_str = current_str.replace(current_str[start_ind:end_ind+1], dict_value[1])
 
+            while result_str.find('@') != -1:
+
+                next_start = result_str.find('@')
+
+                next_end = result_str.find('#')
+
+                next_var = result_str[next_start:next_end + 1]
+
+                result_str = result_str.replace(next_var, ValueUncertainty._values_dict[next_var][1])
+
             variable_str = current_str.replace(current_str[start_ind:end_ind+1], dict_value[0])
 
             return ['$' + result_str + '$'] + ValueUncertainty._recursive_formula_creater(variable_str)
+
+    @staticmethod
+    def _get_var():
+
+        if ValueUncertainty._capture_calcs:
+            variable = ValueUncertainty._last_var[0]
+
+        else:
+            variable = ''
+        
+        return variable
 
 
 
