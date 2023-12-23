@@ -474,6 +474,9 @@ class ValueUncertainty:
 
             case 'log':
                 return
+            
+            case 'sum':
+                pass
 
         self._values_dict[self._last_var[0]] = (variable_string, numeric_string)
 
