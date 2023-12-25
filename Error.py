@@ -325,7 +325,13 @@ class ValueUncertainty:
     
 
     def __abs__(self):
-        return ValueUncertainty(abs(self.values), self.errors)
+
+        if self._capture_calcs:
+            self._format_value_calcs('abs', (self._variable_name, self.values[0]))
+
+        variable = self._get_var()
+
+        return ValueUncertainty(abs(self.values), self.errors, variable_name=variable)
     
 
     @staticmethod
@@ -419,6 +425,14 @@ class ValueUncertainty:
         
         self._update_last_var()
 
+        variable_value_pairs = list(variable_value_pairs)
+
+        for i in range(len(variable_value_pairs)):
+            
+            if variable_value_pairs[i][0] == '':
+                variable_value_pairs[i] = (str(variable_value_pairs[i][1]), 
+                                           variable_value_pairs[i][1])
+
         match operation:
 
             case '+':
@@ -452,31 +466,76 @@ class ValueUncertainty:
                 numeric_string = f"{round(variable_value_pairs[0][1], self._precision)}^{{{round(variable_value_pairs[1][1], self._precision)}}}" 
             
             case 'sin':
-                return
+
+                self._last_operation = 'sin'
+
+                variable_string = f"\\sin({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\sin({round(variable_value_pairs[0][1], self._precision)})"
+
 
             case 'cos':
-                return 
+                self._last_operation = 'cos'
+
+                variable_string = f"\\cos({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\cos({round(variable_value_pairs[0][1], self._precision)})" 
 
             case 'tan':
-                return 
+                self._last_operation = 'tan'
+
+                variable_string = f"\\tan({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\tan({round(variable_value_pairs[0][1], self._precision)})" 
 
             case 'arcsin':
-                return
+                self._last_operation = 'arcsin'
+
+                variable_string = f"\\arcsin({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\arcsin({round(variable_value_pairs[0][1], self._precision)})"
             
             case 'arccos':
-                return
+                self._last_operation = 'arccos'
+
+                variable_string = f"\\arccos({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\srccos({round(variable_value_pairs[0][1], self._precision)})"
 
             case 'arctan':
-                return
+                self._last_operation = 'arctan'
+
+                variable_string = f"\\arctan({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\arctan({round(variable_value_pairs[0][1], self._precision)})"
 
             case 'e':
-                return
+                self._last_operation = 'e'
+
+                variable_string = f"e^{{{variable_value_pairs[0][0]}}}"
+
+                numeric_string = f"e^{{{round(variable_value_pairs[0][1], self._precision)}}}"
 
             case 'log':
-                return
+                self._last_operation = 'log'
+
+                variable_string = f"\\log({variable_value_pairs[0][0]})"
+
+                numeric_string = f"\\log({round(variable_value_pairs[0][1], self._precision)})"
             
             case 'sum':
-                pass
+                self._last_operation = 'sum'
+
+                variable_string = f"\\Sigma"
+
+                numeric_string = f"\\Sigma"
+
+            case 'abs':
+                self._last_operation = 'abs'
+
+                variable_string = f"|{variable_value_pairs[0][0]}|"
+
+                numeric_string = f"|{round(variable_value_pairs[0][1], self._precision)}|"
 
         self._values_dict[self._last_var[0]] = (variable_string, numeric_string)
 
