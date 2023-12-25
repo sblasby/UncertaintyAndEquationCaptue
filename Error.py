@@ -354,32 +354,128 @@ class ValueUncertainty:
 
     @staticmethod
     def sin(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
 
+            values = np.sin(value_uncertainty.values)
+
+            errors = np.cos(value_uncertainty.values) * value_uncertainty.errors
+
+        else:
+
+            values = np.sin(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
 
     @staticmethod
     def cos(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
+
+            values = np.cos(value_uncertainty.values)
+
+            errors = np.sin(value_uncertainty.values) * value_uncertainty.errors
+
+        else:
+
+            values = np.cos(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
 
 
     @staticmethod
     def tan(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
+
+            values = np.tan(value_uncertainty.values)
+
+            errors =  value_uncertainty.errors / ((np.cos(value_uncertainty.values)) ** 2)
+            
+        else:
+
+            values = np.tan(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
 
 
     @staticmethod
     def arcsin(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
+
+            values = np.arcsin(value_uncertainty.values)
+
+            errors =  1 / np.sqrt(1 - (value_uncertainty.values**2)) * value_uncertainty.errors
+            
+        else:
+
+            values = np.arcsin(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
 
 
     @staticmethod
     def arccos(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
+
+            values = np.arccos(value_uncertainty.values)
+
+            errors =  -1 / np.sqrt(1 - (value_uncertainty.values**2)) * value_uncertainty.errors
+            
+        else:
+
+            values = np.arccos(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
 
 
     @staticmethod
     def arctan(value_uncertainty):
-        pass
+        """
+        IN RADS
+        """
+        
+        if type(value_uncertainty) == ValueUncertainty:
+
+            values = np.arctan(value_uncertainty.values)
+
+            errors =  1 / (1 + (value_uncertainty.values**2)) * value_uncertainty.errors
+            
+        else:
+
+            values = np.arctan(value_uncertainty)
+
+            errors = 0
+
+        return ValueUncertainty(values, errors)
+
 
     @staticmethod
     def StartCalcCapture(precision = 4):
