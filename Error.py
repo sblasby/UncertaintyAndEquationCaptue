@@ -1,5 +1,7 @@
 import numpy as np
 
+from Utilities import *
+
 class ValueUncertainty:
     
     _values_dict = {}
@@ -8,7 +10,7 @@ class ValueUncertainty:
 
     _last_operation = ''
 
-    _last_var = ['@0#']
+    _last_var = '@0#'
 
     @property
     def mean(self):
@@ -125,19 +127,15 @@ class ValueUncertainty:
 
             errors = np.sqrt(self.errors**2 + addend.errors**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('+',(self._variable_name, self.values[0]), (addend._variable_name, addend.values[0]))
-
         else:
 
             values = self.values + addend
 
             errors = self.errors
-
-            if self._capture_calcs:
-
-                self._format_value_calcs('+',(self._variable_name, self.values[0]), (str(addend), addend))
+        
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('+', self, addend)
         
         variable = ValueUncertainty._get_var()
 
@@ -147,7 +145,6 @@ class ValueUncertainty:
 
     def __mul__(self, factor):
 
-        
 
         if type(factor) == ValueUncertainty:
 
@@ -155,19 +152,15 @@ class ValueUncertainty:
 
             errors = values * np.sqrt((self.errors / self.values)**2 + (factor.errors / factor.values)**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('*',(self._variable_name, self.values[0]), (factor._variable_name, factor.values[0]))
-
         else:
 
             values = self.values * factor
 
             errors = self.errors * factor
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('*',(self._variable_name, self.values[0]), (str(factor), factor))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('*', self, factor)
 
         variable = ValueUncertainty._get_var()
         
@@ -183,18 +176,14 @@ class ValueUncertainty:
 
             errors = values * np.sqrt((self.errors / self.values)**2 + (divisor.errors / divisor.values)**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('/',(self._variable_name, self.values[0]), (divisor._variable_name, divisor.values[0]))
-
         else:
             values = self.values / divisor
 
             errors = self.errors / divisor
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('/',(self._variable_name, self.values[0]), (str(divisor), divisor))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('/', self, divisor)
         
         variable = ValueUncertainty._get_var()
 
@@ -210,18 +199,14 @@ class ValueUncertainty:
 
             errors = values * np.sqrt((self.errors / self.values)**2 + (quotient.errors / quotient.values)**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('/', (quotient._variable_name, quotient.values[0]), (self._variable_name, self.values[0]))
-
         else:
             values = quotient / self.values
 
             errors = values * self.errors / self.values
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('/', (str(quotient), quotient), (self._variable_name, self.values[0]))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('/', quotient, self)
         
         variable = ValueUncertainty._get_var()
 
@@ -234,9 +219,9 @@ class ValueUncertainty:
         
         errors = power * values * self.errors / self.values
 
-        if self._capture_calcs:
-
-                self._format_value_calcs('**',(self._variable_name, self.values[0]), (str(power), power))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('**', self, power)
 
         variable = ValueUncertainty._get_var()
 
@@ -251,9 +236,9 @@ class ValueUncertainty:
 
         errors = values * np.log(base) * self.errors
 
-        if self._capture_calcs:
-
-            self._format_value_calcs('**', (str(base), base), (self._variable_name, self.values[0]))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('**', base, self)
 
         variable = ValueUncertainty._get_var()
 
@@ -273,19 +258,15 @@ class ValueUncertainty:
 
             errors = np.sqrt(self.errors**2 + term.errors**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('-',(self._variable_name, self.values[0]), (term._variable_name, term.values[0]))
-
         else:
 
             values = self.values - term
 
             errors = self.errors
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('-',(self._variable_name, self.values[0]), (str(term), term))
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('-', self, term)
         
         variable = ValueUncertainty._get_var()
 
@@ -301,20 +282,16 @@ class ValueUncertainty:
 
             errors = np.sqrt(self.errors**2 + term.errors**2)
 
-            if self._capture_calcs:
-
-                self._format_value_calcs('-', (term._variable_name, term.values[0]), (self._variable_name, self.values[0]))
-
         else:
 
             values = term - self.values
 
             errors = self.errors
 
-            if self._capture_calcs:
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('-', term, self)
 
-                self._format_value_calcs('-', (str(term), term),(self._variable_name, self.values[0]))
-        
         variable = ValueUncertainty._get_var()
 
         return ValueUncertainty(values, errors, variable_name=variable)
@@ -326,8 +303,8 @@ class ValueUncertainty:
 
     def __abs__(self):
 
-        if self._capture_calcs:
-            self._format_value_calcs('abs', (self._variable_name, self.values[0]))
+        if ValueUncertainty._capture_calcs:
+            ValueUncertainty._format_value_calcs('abs', self)
 
         variable = self._get_var()
 
@@ -336,6 +313,9 @@ class ValueUncertainty:
 
     @staticmethod
     def sqrt(rooted):
+
+        ## Format string for sqrt
+
         return rooted ** (1/2)
     
 
@@ -370,7 +350,13 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('sin', value_uncertainty)
+
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
     @staticmethod
     def cos(value_uncertainty):
@@ -390,7 +376,13 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('cos', value_uncertainty)
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     @staticmethod
@@ -411,7 +403,12 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+            ValueUncertainty._format_value_calcs('tan', value_uncertainty)
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     @staticmethod
@@ -432,7 +429,13 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('arcsin', value_uncertainty)
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     @staticmethod
@@ -453,7 +456,13 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+            
+            ValueUncertainty._format_value_calcs('arccos', value_uncertainty)
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     @staticmethod
@@ -474,7 +483,13 @@ class ValueUncertainty:
 
             errors = 0
 
-        return ValueUncertainty(values, errors)
+        if ValueUncertainty._capture_calcs:
+
+            ValueUncertainty._format_value_calcs('arctan', value_uncertainty)
+        
+        variable = ValueUncertainty._get_var()
+
+        return ValueUncertainty(values, errors, variable_name=variable)
 
 
     @staticmethod
@@ -487,7 +502,7 @@ class ValueUncertainty:
     @staticmethod
     def EndCalcCapture():
 
-        current_var = ValueUncertainty._last_var[0]
+        current_var = ValueUncertainty._last_var
 
         next_var = f"@{int(current_var[1:-1]) + 1}#"
 
@@ -501,7 +516,7 @@ class ValueUncertainty:
 
         value_dict[final_var] = (next_var, '')        
         
-        latex_list = ValueUncertainty._recursive_formula_creater(value_dict[final_var][0])
+        latex_list = LatexCreator(value_dict[final_var][0], value_dict)
 
         latex_list.reverse()
 
@@ -511,227 +526,35 @@ class ValueUncertainty:
 
         ValueUncertainty._last_operation = ''
 
-        ValueUncertainty._last_var = ['@0#']
+        ValueUncertainty._last_var = '@0#'
 
         return latex_list
 
 
-
-    def _format_value_calcs(self, operation, *variable_value_pairs):
+    @staticmethod
+    def _format_value_calcs(operation, *items):
         
-        self._update_last_var()
+        ValueUncertainty._update_last_var()
 
-        variable_value_pairs = list(variable_value_pairs)
+        items_func = lambda ele: (ele._variable_name, ele.values[0]) if type(ele) == ValueUncertainty else (str(ele), ele)
 
-        for i in range(len(variable_value_pairs)):
-            
-            if variable_value_pairs[i][0] == '':
-                variable_value_pairs[i] = (str(variable_value_pairs[i][1]), 
-                                           variable_value_pairs[i][1])
+        variable_values = tuple(map(items_func, items))
 
-        match operation:
+        variable_str, numeric_str = CreateValueLatexSting(operation, *variable_values)
 
-            case '+':
+        ValueUncertainty._values_dict[ValueUncertainty._last_var] = (variable_str, numeric_str)
 
-                self._basic_opertaion(operation, *variable_value_pairs)
-                return
-
-            case '-':
-
-                self._basic_opertaion(operation, *variable_value_pairs)
-                return
-
-            case '*':
-
-                self._basic_opertaion(operation, *variable_value_pairs)
-                return
-
-            case '/':
-                
-                self._last_operation = '/'
-
-                variable_string = f"\\frac{{{variable_value_pairs[0][0]}}}{{{variable_value_pairs[1][0]}}}"
-
-                numeric_string = f"\\frac{{{round(variable_value_pairs[0][1], self._precision)}}}{{{round(variable_value_pairs[1][1], self._precision)}}}" 
-
-            case '**':
-                self._last_operation = '**'
-
-                variable_string = f"{variable_value_pairs[0][0]}^{{{variable_value_pairs[1][0]}}}"
-
-                numeric_string = f"{round(variable_value_pairs[0][1], self._precision)}^{{{round(variable_value_pairs[1][1], self._precision)}}}" 
-            
-            case 'sin':
-
-                self._last_operation = 'sin'
-
-                variable_string = f"\\sin({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\sin({round(variable_value_pairs[0][1], self._precision)})"
-
-
-            case 'cos':
-                self._last_operation = 'cos'
-
-                variable_string = f"\\cos({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\cos({round(variable_value_pairs[0][1], self._precision)})" 
-
-            case 'tan':
-                self._last_operation = 'tan'
-
-                variable_string = f"\\tan({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\tan({round(variable_value_pairs[0][1], self._precision)})" 
-
-            case 'arcsin':
-                self._last_operation = 'arcsin'
-
-                variable_string = f"\\arcsin({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\arcsin({round(variable_value_pairs[0][1], self._precision)})"
-            
-            case 'arccos':
-                self._last_operation = 'arccos'
-
-                variable_string = f"\\arccos({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\srccos({round(variable_value_pairs[0][1], self._precision)})"
-
-            case 'arctan':
-                self._last_operation = 'arctan'
-
-                variable_string = f"\\arctan({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\arctan({round(variable_value_pairs[0][1], self._precision)})"
-
-            case 'e':
-                self._last_operation = 'e'
-
-                variable_string = f"e^{{{variable_value_pairs[0][0]}}}"
-
-                numeric_string = f"e^{{{round(variable_value_pairs[0][1], self._precision)}}}"
-
-            case 'log':
-                self._last_operation = 'log'
-
-                variable_string = f"\\log({variable_value_pairs[0][0]})"
-
-                numeric_string = f"\\log({round(variable_value_pairs[0][1], self._precision)})"
-            
-            case 'sum':
-                self._last_operation = 'sum'
-
-                variable_string = f"\\Sigma"
-
-                numeric_string = f"\\Sigma"
-
-            case 'abs':
-                self._last_operation = 'abs'
-
-                variable_string = f"|{variable_value_pairs[0][0]}|"
-
-                numeric_string = f"|{round(variable_value_pairs[0][1], self._precision)}|"
-
-        self._values_dict[self._last_var[0]] = (variable_string, numeric_string)
-
-
-    def _format_error_calcs(self, value_error1: tuple, value_error2: tuple, operation):
-
-        value1, error1 = value_error1
-        value2, error2 = value_error2
-
-        match operation:
-
-            case '+':
-                pass
-
-            case '-':
-                pass
-
-            case '*':
-                pass
-
-            case '/':
-                pass
-
-            case '**':
-                pass
-            
-            case 'sin':
-                pass
-
-            case 'cos':
-                pass
-
-            case 'tan':
-                pass
-
-            case 'arcsin':
-                pass
-
-            case 'arccos':
-                pass
-
-            case 'arctan':
-                pass
-
-            case 'e':
-                pass
-
-            case 'log':
-                pass
-
-
-    def _basic_opertaion(self, *args):
-
-        self._last_operation = args[0]
-
-        variable_string = f"{args[1][0]} {args[0]} {args[2][0]}"
-
-        numeric_string = f"{round(args[1][1], self._precision)} {args[0]} {round(args[2][1], self._precision)}"
-        
-        self._values_dict[self._last_var[0]] = (variable_string, numeric_string) 
-
-
-    def _update_last_var(self):
-        ValueUncertainty._last_var[0] = f"@{int(self._last_var[0][1:-1]) + 1}#"
 
     @staticmethod
-    def _recursive_formula_creater(current_str : str):
-        
-        start_ind = current_str.find("@")
+    def _update_last_var():
+        ValueUncertainty._last_var = f"@{int(ValueUncertainty._last_var[1:-1]) + 1}#"
 
-        if start_ind == -1:
-            return ['$' + current_str + '$'] # Need to put something here
-        
-        else:
-
-            end_ind = current_str.find('#')
-
-            dict_value = ValueUncertainty._values_dict[current_str[start_ind:end_ind+1]]
-
-            result_str = current_str.replace(current_str[start_ind:end_ind+1], dict_value[1])
-
-            while result_str.find('@') != -1:
-
-                next_start = result_str.find('@')
-
-                next_end = result_str.find('#')
-
-                next_var = result_str[next_start:next_end + 1]
-
-                result_str = result_str.replace(next_var, ValueUncertainty._values_dict[next_var][1])
-
-            variable_str = current_str.replace(current_str[start_ind:end_ind+1], dict_value[0])
-
-            return ['$' + result_str + '$'] + ValueUncertainty._recursive_formula_creater(variable_str)
 
     @staticmethod
     def _get_var():
 
         if ValueUncertainty._capture_calcs:
-            variable = ValueUncertainty._last_var[0]
+            variable = ValueUncertainty._last_var
 
         else:
             variable = ''
