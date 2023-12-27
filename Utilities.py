@@ -144,18 +144,20 @@ def CreateValueLatexSting(operation, *variable_value_pairs):
 
 
 
-def _format_error_calcs(self, value_error1: tuple, value_error2: tuple, operation):
+def CreateErrorLatexString(operation, result, *variable_value_pairs):
 
-        value1, error1 = value_error1
-        value2, error2 = value_error2
+        item1, *item2 = CreateVariableValues(variable_value_pairs)
+
+        if item2 != []:
+            item2 = item2[0]
 
         match operation:
 
             case '+':
-                pass
+                return f"\\text{{Addition Error:}} \\sqrt{{{item1.Value}^2 + {item2.Value}^2}} \\approx {result}"
 
             case '-':
-                pass
+                return f"\\text{{Subtraction Error:}} \\sqrt{{{item1.Value}^2 + {item2.Value}^2}} \\approx {result}"
 
             case '*':
                 pass
