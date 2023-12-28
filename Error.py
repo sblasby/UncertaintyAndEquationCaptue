@@ -6,9 +6,9 @@ class ValueUncertainty:
     
     _values_dict = {}
 
-    _capture_calcs = False
+    _error_operations = []
 
-    _last_operation = ''
+    _capture_calcs = False
 
     _last_var = '@0#'
 
@@ -77,7 +77,13 @@ class ValueUncertainty:
 
         self.errors = abs(errors)
 
-        self._variable_name = variable_name
+        if variable_name == "":
+            
+            self._variable_name = str(self.values[0])
+        
+        else:
+
+            self._variable_name = variable_name
 
 
     def __len__(self):
@@ -136,6 +142,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('+', self, addend)
+
+            ValueUncertainty._format_error_calcs('+', errors[0], self, addend)
         
         variable = ValueUncertainty._get_var()
 
@@ -144,7 +152,6 @@ class ValueUncertainty:
 
 
     def __mul__(self, factor):
-
 
         if type(factor) == ValueUncertainty:
 
@@ -161,6 +168,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('*', self, factor)
+
+            ValueUncertainty._format_error_calcs('*', errors[0], self, factor)
 
         variable = ValueUncertainty._get_var()
         
@@ -184,6 +193,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('/', self, divisor)
+
+            ValueUncertainty._format_error_calcs('/', errors[0], self, divisor)
         
         variable = ValueUncertainty._get_var()
 
@@ -207,6 +218,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('/', quotient, self)
+
+            ValueUncertainty._format_error_calcs('/', errors[0], quotient, self)
         
         variable = ValueUncertainty._get_var()
 
@@ -223,14 +236,14 @@ class ValueUncertainty:
             
             ValueUncertainty._format_value_calcs('**', self, power)
 
+            ValueUncertainty._format_error_calcs('l**', errors[0], self, power)
+
         variable = ValueUncertainty._get_var()
 
         return ValueUncertainty(values, errors, variable_name=variable)
 
 
     def __rpow__(self, base):
-
-        
 
         values = base ** self.values
 
@@ -239,6 +252,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('**', base, self)
+
+            ValueUncertainty._format_error_calcs('r**', errors[0], base, self)
 
         variable = ValueUncertainty._get_var()
 
@@ -267,6 +282,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('-', self, term)
+
+            ValueUncertainty._format_error_calcs('-', errors[0], self, term)
         
         variable = ValueUncertainty._get_var()
 
@@ -274,7 +291,6 @@ class ValueUncertainty:
 
 
     def __rsub__(self, term):
-
 
         if type(term) == ValueUncertainty:
 
@@ -291,6 +307,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('-', term, self)
+
+            ValueUncertainty._format_error_calcs('-', errors[0], term, self)
 
         variable = ValueUncertainty._get_var()
 
@@ -354,6 +372,8 @@ class ValueUncertainty:
             
             ValueUncertainty._format_value_calcs('sin', value_uncertainty)
 
+            ValueUncertainty._format_error_calcs('sin', errors[0], value_uncertainty)
+
         variable = ValueUncertainty._get_var()
 
         return ValueUncertainty(values, errors, variable_name=variable)
@@ -379,6 +399,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('cos', value_uncertainty)
+
+            ValueUncertainty._format_error_calcs('cos', errors[0], value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -405,6 +427,8 @@ class ValueUncertainty:
 
         if ValueUncertainty._capture_calcs:
             ValueUncertainty._format_value_calcs('tan', value_uncertainty)
+
+            ValueUncertainty._format_error_calcs('tan', errors[0], value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -432,6 +456,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('arcsin', value_uncertainty)
+
+            ValueUncertainty._format_error_calcs('arcsin', errors[0], value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -459,6 +485,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             
             ValueUncertainty._format_value_calcs('arccos', value_uncertainty)
+
+            ValueUncertainty._format_error_calcs('arccos', errors[0], value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -486,6 +514,8 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
 
             ValueUncertainty._format_value_calcs('arctan', value_uncertainty)
+
+            ValueUncertainty._format_error_calcs('arctan', errors[0], value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -496,6 +526,12 @@ class ValueUncertainty:
     def StartCalcCapture(precision = 4):
         
         ValueUncertainty._capture_calcs = True
+
+        ValueUncertainty._last_var = '@0#'
+
+        ValueUncertainty._error_operations = []
+
+        ValueUncertainty._values_dict = {}
 
         ValueUncertainty._precision = precision
     
@@ -520,15 +556,9 @@ class ValueUncertainty:
 
         latex_list.reverse()
 
-        ValueUncertainty._values_dict = {}
-
         ValueUncertainty._capture_calcs = False
 
-        ValueUncertainty._last_operation = ''
-
-        ValueUncertainty._last_var = '@0#'
-
-        return latex_list
+        return latex_list, ValueUncertainty._error_operations
 
 
     @staticmethod
@@ -543,6 +573,16 @@ class ValueUncertainty:
         variable_str, numeric_str = CreateValueLatexSting(operation, *variable_values)
 
         ValueUncertainty._values_dict[ValueUncertainty._last_var] = (variable_str, numeric_str)
+
+
+    @staticmethod
+    def _format_error_calcs(operation, error_result, *items):
+
+        items_func = lambda ele: (ele.values[0], ele.errors[0]) if type(ele) == ValueUncertainty else (ele, 0)
+
+        value_errors = tuple(map(items_func, items))
+
+        ValueUncertainty._error_operations.append(CreateErrorLatexString(operation, error_result, *value_errors))
 
 
     @staticmethod

@@ -15,6 +15,12 @@ def CreateVariableValues(*variable_value_pairs):
 
     return tuple(map(lambda tup: VariableValue(*tup), *variable_value_pairs))
 
+def CreateValueUncertainties(*value_error_pairs):
+
+    ValueUncertainties = namedtuple('ValueUncertainties', ["Value", "Error"])
+
+    return tuple(map(lambda tup: ValueUncertainties(*tup), *value_error_pairs))
+
 
 def LatexCreator(current_str: str, variable_dict : dict):
 
@@ -144,9 +150,9 @@ def CreateValueLatexSting(operation, *variable_value_pairs):
 
 
 
-def CreateErrorLatexString(operation, result, *variable_value_pairs):
+def CreateErrorLatexString(operation, error_result, *value_error_pairs):
 
-        item1, *item2 = CreateVariableValues(variable_value_pairs)
+        item1, *item2 = CreateValueUncertainties(value_error_pairs)
 
         if item2 != []:
             item2 = item2[0]
@@ -154,20 +160,23 @@ def CreateErrorLatexString(operation, result, *variable_value_pairs):
         match operation:
 
             case '+':
-                return f"\\text{{Addition Error:}} \\sqrt{{{item1.Value}^2 + {item2.Value}^2}} \\approx {result}"
+                return f"\\text{{Addition Error:}} \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '-':
-                return f"\\text{{Subtraction Error:}} \\sqrt{{{item1.Value}^2 + {item2.Value}^2}} \\approx {result}"
+                return f"\\text{{Subtraction Error:}} \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '*':
-                pass
+                return f"\\text{{Multiplication Error:}} {item1.Value} * {item2.Value}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
 
             case '/':
+                return f"\\text{{Division Error:}} \\frac{{{item1.Value}}}{{{item2.Value}}}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
+
+            case 'l**':
+                return f"\\text{{Power Error:}} \\frac{{{item2.Value}*{item1.Value}^{item2.Value}*{item1.Error}}}{{{item1.Value}}} \\approx {error_result}"
+            
+            case 'r**':
                 pass
 
-            case '**':
-                pass
-            
             case 'sin':
                 pass
 
