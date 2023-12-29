@@ -11,15 +11,15 @@ def CreateVariableValues(*variable_value_pairs):
     formats and returns a list of named tuples
     """
 
-    VariableValue = namedtuple('VariableValue', ["Variable", "Value"])
+    VariableValueTup = namedtuple('VariableValueTup', ["Variable", "Value"])
 
-    return tuple(map(lambda tup: VariableValue(*tup), *variable_value_pairs))
+    return tuple(map(lambda tup: VariableValueTup(*tup), *variable_value_pairs))
 
 def CreateValueUncertainties(*value_error_pairs):
 
-    ValueUncertainties = namedtuple('ValueUncertainties', ["Value", "Error"])
+    ValueUncertaintiesTup = namedtuple('ValueUncertaintiesTup', ["Value", "Error"])
 
-    return tuple(map(lambda tup: ValueUncertainties(*tup), *value_error_pairs))
+    return tuple(map(lambda tup: ValueUncertaintiesTup(*tup), *value_error_pairs))
 
 
 def LatexCreator(current_str: str, variable_dict : dict):
@@ -62,6 +62,30 @@ def LatexCreator(current_str: str, variable_dict : dict):
         return ['$' + result_str + '$'] + LatexCreator(variable_str, variable_dict)
     
 
+def ErrorBeginning(operation, *named_tuples):
+    
+    item1, *item2 = named_tuples
+
+    if item2 != []:
+        item2 = item2[0]
+
+    format_func = lambda a, b: f"{{{a}}} {operation} {{{b}}}"
+
+    pm_func = lambda n: f"{n.Value}\\pm{n.Error}"
+
+    if item1.Error == 0 and item2.Error == 0:
+        return format_func(item1.Value, item2.Value)
+    
+    elif item1.Error == 0:
+        return format_func(item1.Value, pm_func(item2)) 
+    
+    elif item2.Error == 0:
+        return format_func(pm_func(item1), item2.Value)  
+    
+    else:
+        return format_func(pm_func(item1), pm_func(item2))  
+
+    
 def CreateValueLatexSting(operation, *variable_value_pairs):
     
     item1, *item2 = CreateVariableValues(variable_value_pairs)
@@ -160,22 +184,22 @@ def CreateErrorLatexString(operation, error_result, *value_error_pairs):
         match operation:
 
             case '+':
-                return f"{item1.Value}\\pm{item1.Error} + {item2.Value}\\pm{item2.Error}\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
+                return ErrorBeginning('+', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '-':
-                return f"{item1.Value}\\pm{item1.Error} - {item2.Value}\\pm{item2.Error}\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
+                return ErrorBeginning('-', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '*':
-                return f"{item1.Value}\\pm{item1.Error} * {item2.Value}\\pm{item2.Error} \\text{{, Error }} = {item1.Value} * {item2.Value}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
+                return ErrorBeginning('*', item1, item2) + f"\\text{{, Error }} = {item1.Value} * {item2.Value}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
 
             case '/':
-                return f"\\frac{{{item1.Value}\\pm{item1.Error}}}{{{item2.Value}\\pm{item2.Error}}} \\text{{, Error }} = \\frac{{{item1.Value}}}{{{item2.Value}}}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
+                return ErrorBeginning('/', item1, item2) + f"\\text{{, Error }} = \\frac{{{item1.Value}}}{{{item2.Value}}}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
 
             case 'l**':
-                return f"({item1.Value}\\pm{item1.Error})^{{{item2.Value}\\pm{item2.Error}}} \\text{{, Error }} = \\frac{{{item2.Value}*{item1.Value}^{item2.Value}*{item1.Error}}}{{{item1.Value}}} \\approx {error_result}"
+                return ErrorBeginning('^', item1, item2) + f"\\text{{, Error }} = \\frac{{{item2.Value}*{item1.Value}^{item2.Value}*{item1.Error}}}{{{item1.Value}}} \\approx {error_result}"
             
             case 'r**':
-                pass
+                return ErrorBeginning('^', item1, item2) + f"\\text{{, Error }} = ... \\approx {error_result}"
 
             case 'sin':
                 pass
