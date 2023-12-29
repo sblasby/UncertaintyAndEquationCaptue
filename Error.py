@@ -372,7 +372,7 @@ class ValueUncertainty:
             
             ValueUncertainty._format_value_calcs('sin', value_uncertainty)
 
-            ValueUncertainty._format_error_calcs('sin', errors[0], value_uncertainty)
+            ValueUncertainty._format_error_calcs('sin', abs(errors[0]), value_uncertainty)
 
         variable = ValueUncertainty._get_var()
 
@@ -400,7 +400,7 @@ class ValueUncertainty:
             
             ValueUncertainty._format_value_calcs('cos', value_uncertainty)
 
-            ValueUncertainty._format_error_calcs('cos', errors[0], value_uncertainty)
+            ValueUncertainty._format_error_calcs('cos', abs(errors[0]), value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 
@@ -428,7 +428,7 @@ class ValueUncertainty:
         if ValueUncertainty._capture_calcs:
             ValueUncertainty._format_value_calcs('tan', value_uncertainty)
 
-            ValueUncertainty._format_error_calcs('tan', errors[0], value_uncertainty)
+            ValueUncertainty._format_error_calcs('tan', abs(errors[0]), value_uncertainty)
         
         variable = ValueUncertainty._get_var()
 

@@ -62,12 +62,7 @@ def LatexCreator(current_str: str, variable_dict : dict):
         return ['$' + result_str + '$'] + LatexCreator(variable_str, variable_dict)
     
 
-def ErrorBeginning(operation, *named_tuples):
-    
-    item1, *item2 = named_tuples
-
-    if item2 != []:
-        item2 = item2[0]
+def ErrorBeginning2Items(operation, item1, item2):
 
     format_func = lambda a, b: f"{{{a}}} {operation} {{{b}}}"
 
@@ -83,7 +78,15 @@ def ErrorBeginning(operation, *named_tuples):
         return format_func(pm_func(item1), item2.Value)  
     
     else:
-        return format_func(pm_func(item1), pm_func(item2))  
+        return format_func(pm_func(item1), pm_func(item2))
+    
+def ErrorBeginning1Item(format_func, item):
+
+    if item.Error == 0:
+        return format_func(item.Value)
+    
+    else:
+        return format_func(f"{item.Value}\\pm{item.Error}")
 
     
 def CreateValueLatexSting(operation, *variable_value_pairs):
@@ -184,31 +187,36 @@ def CreateErrorLatexString(operation, error_result, *value_error_pairs):
         match operation:
 
             case '+':
-                return ErrorBeginning('+', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
+                return ErrorBeginning2Items('+', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '-':
-                return ErrorBeginning('-', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
+                return ErrorBeginning2Items('-', item1, item2) + f"\\text{{, Error }} = \\sqrt{{{item1.Error}^2 + {item2.Error}^2}} \\approx {error_result}"
 
             case '*':
-                return ErrorBeginning('*', item1, item2) + f"\\text{{, Error }} = {item1.Value} * {item2.Value}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
+                return ErrorBeginning2Items('*', item1, item2) + f"\\text{{, Error }} = {item1.Value} * {item2.Value}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
 
             case '/':
-                return ErrorBeginning('/', item1, item2) + f"\\text{{, Error }} = \\frac{{{item1.Value}}}{{{item2.Value}}}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
+                return ErrorBeginning2Items('/', item1, item2) + f"\\text{{, Error }} = \\frac{{{item1.Value}}}{{{item2.Value}}}\\sqrt{{(\\frac{{{item1.Error}}}{{{item1.Value}}})^2 + (\\frac{{{item2.Error}}}{{{item2.Value}}})^2}} \\approx {error_result}"
 
             case 'l**':
-                return ErrorBeginning('^', item1, item2) + f"\\text{{, Error }} = \\frac{{{item2.Value}*{item1.Value}^{item2.Value}*{item1.Error}}}{{{item1.Value}}} \\approx {error_result}"
+                return ErrorBeginning2Items('^', item1, item2) + f"\\text{{, Error }} = \\frac{{{item2.Value}*{item1.Value}^{item2.Value}*{item1.Error}}}{{{item1.Value}}} \\approx {error_result}"
             
             case 'r**':
-                return ErrorBeginning('^', item1, item2) + f"\\text{{, Error }} = ... \\approx {error_result}"
+                return ErrorBeginning2Items('^', item1, item2) + f"\\text{{, Error }} = {item1.Value}^{{{item2.Value}}}*\\log{{{item1.Value}}}*{item2.Error} \\approx {error_result}"
 
             case 'sin':
-                pass
+                
+                format_func = lambda x: f"\\sin{{{x}}}"
+                return ErrorBeginning1Item(format_func, item1) + f"\\text{{, Error }} = {item1.Error} * \\cos({item1.Value}) \\approx {error_result}"
 
             case 'cos':
-                pass
+                
+                format_func = lambda x: f"\\cos{{{x}}}"
+                return ErrorBeginning1Item(format_func, item1) + f"\\text{{, Error }} = {item1.Error} * \\sin({item1.Value}) \\approx {error_result}"
 
             case 'tan':
-                pass
+                format_func = lambda x: f"\\tan{{{x}}}"
+                return ErrorBeginning1Item(format_func, item1) + f"\\text{{, Error }} = {item1.Error} * \\sec^2({item1.Value}) \\approx {error_result}"
 
             case 'arcsin':
                 pass
