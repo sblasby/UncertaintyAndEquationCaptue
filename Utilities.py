@@ -228,7 +228,8 @@ def CreateErrorLatexString(operation, error_result, *value_error_pairs):
                 pass
 
             case 'e':
-                pass
+                format_func = lambda x: f"e^{{{x}}}"
+                return ErrorBeginning1Item(format_func, item1) + f"\\text{{, Error}} = {item1.Error} * e^{{{item1.Value}}} \\approx {error_result}"
 
             case 'log':
                 pass
